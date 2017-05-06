@@ -1,5 +1,27 @@
 apply plugin: 'com.android.library'
+ext {
+	bintrayRepo = 'maven'
+	bintrayName = 'fasterserializer'
 
+	publishedGroupId = 'android.samutils'
+	libraryName = 'Faster-serializer'
+	artifact = 'faster-serializer'
+
+	libraryDescription = ' Android library for faster POJO de|serialization and Json parsing '
+
+	siteUrl = 'https://github.com/s-a--m/faster-serializer'
+	gitUrl = 'https://github.com/s-a--m/faster-serializer.git'
+
+	libraryVersion = '0.9.0'
+
+	developerId = 'dmitrysamoylenko'
+	developerName = 'Dmitry'
+	developerEmail = 'dmitrysamoylenko@gmail.com'
+
+	licenseName = 'The Apache Software License, Version 2.0'
+	licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+	allLicenses = ["Apache-2.0"]
+}
 android {
 	compileSdkVersion 25
 	buildToolsVersion "25.0.2"
