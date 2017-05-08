@@ -3,17 +3,16 @@ package android.samutils.fasterserializer.mapping;
 import android.samutils.fasterserializer.mapping.value.TokenizedEnum;
 import android.samutils.fasterserializer.mapping.value.UniqueObject;
 import android.samutils.fasterserializer.mapping.value.UniqueObjectField;
+import android.samutils.fasterserializer.processor.Value;
 import android.samutils.utils.ArrayUtils;
 import android.samutils.utils.Assert;
 import android.samutils.utils.DateUtils;
 import android.text.TextUtils;
-import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -29,8 +28,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import android.samutils.fasterserializer.processor.Value;
 
 public final class Jsoner extends ValueHelper {
 
@@ -600,14 +597,6 @@ public final class Jsoner extends ValueHelper {
 	// use Jackson.read
 	public static <T> T read(final JSONObject json, final Class<T> type, final boolean allFields) throws JSONException {
 
-		T jacksonParsing = null;
-		try {
-			jacksonParsing = JacksonJsoner.read(json.toString(), type);
-		} catch (final IOException e) {
-			e.printStackTrace();
-			jacksonParsing = null;
-		}
-
 		T result = null;
 
 		if (UniqueObject.class.isAssignableFrom(type)) {
@@ -639,9 +628,7 @@ public final class Jsoner extends ValueHelper {
 				read(json, result, allFields);
 			}
 		}
-
-		logTestParsers(jacksonParsing, result);
-
+		
 		return result;
 	}
 
@@ -1199,13 +1186,6 @@ public final class Jsoner extends ValueHelper {
 
 		final JSONArray jsonArray = json.optJSONArray(key);
 
-		String[] jackson = null;
-		try {
-			jackson = JacksonJsoner.readStringArray(jsonArray.toString());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
 		String[] array = null;
 
 		if (jsonArray != null) {
@@ -1215,9 +1195,7 @@ public final class Jsoner extends ValueHelper {
 			for (int i = 0; i < size; i++) {
 				array[i] = jsonArray.optString(i);
 			}
-
-			logTestParsers(jackson, array);
-
+			
 			return array;
 		} else {
 			return null;
@@ -1441,28 +1419,5 @@ public final class Jsoner extends ValueHelper {
 			json.put(key, jsonMap);
 		}
 	}
-
-	private static void log(final String...messages) {
-		final StringBuilder log = new StringBuilder();
-		for (final String message : messages) {
-			log.append(message);
-		}
-		Log.d(TAG, log.toString());
-	}
-
-	private static void logTestParsers(final Object jacksonParsing, final Object jsonerParsing) {
-		if (jacksonParsing != null) {
-			final String jsonerString = jsonerParsing.toString();
-			final String jacksonString = jacksonParsing.toString();
-			final boolean equals = jacksonParsing.equals(jsonerParsing);
-			log("TEST_PARSING: ",jsonerParsing.getClass().getSimpleName()," equals ",(equals+""));
-			if (!equals) {
-				log("TEST_PARSING JACKSON: ", jacksonString);
-				log("TEST_PARSING JSONER : ", jsonerString);
-			}
-		} else {
-			log("TEST_PARSING JACKSON ERROR "+jsonerParsing.getClass().getSimpleName());
-			log("TEST_PARSING JACKSON ERROR: JSONER : ", jsonerParsing.toString());
-		}
-	}
+	
 }
