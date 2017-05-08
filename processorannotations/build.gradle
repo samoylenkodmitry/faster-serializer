@@ -1,7 +1,32 @@
 apply plugin: 'java'
+ext {
+	bintrayRepo = 'fasterserializer'
+	bintrayName = 'processorannotations'
+
+	publishedGroupId = 'android.samutils'
+	libraryName = 'Faster-serializer-annotations'
+	artifact = 'processorannotations'
+
+	libraryDescription = ' Android library for faster POJO de|serialization and Json parsing '
+
+	siteUrl = 'https://github.com/s-a--m/faster-serializer'
+	gitUrl = 'https://github.com/s-a--m/faster-serializer.git'
+
+	libraryVersion = '0.9.5'
+
+	developerId = 'dmitrysamoylenko'
+	developerName = 'Dmitry'
+	developerEmail = 'dmitrysamoylenko@gmail.com'
+
+	licenseName = 'The Apache Software License, Version 2.0'
+	licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+	allLicenses = ["Apache-2.0"]
+}
 
 dependencies {
 }
 
 sourceCompatibility = "1.7"
 targetCompatibility = "1.7"
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle'

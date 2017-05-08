@@ -89,42 +89,42 @@ public final class JacksonJsoner {
 		sUniqueFieldsMap = uniqueFieldsMap;
 	}
 	
-	public interface IFieldInfo<Object> {
+	public interface IFieldInfo<O> {
 		String getName();
 		
-		void read(final Object obj, final JsonParser json, final JsonNode sourceNode) throws IOException;
+		void read(final O obj, final JsonParser json, final JsonNode sourceNode) throws IOException;
 		
-		void read(final Object obj, final Parcel parcel);
+		void read(final O obj, final Parcel parcel);
 		
-		void write(final Object obj, final Parcel parcel);
+		void write(final O obj, final Parcel parcel);
 	}
 	
-	public abstract static class FieldInfoInt<Object> implements IFieldInfo<Object> {
-	
-	}
-	
-	public abstract static class FieldInfoLong<Object> implements IFieldInfo<Object> {
+	public abstract static class FieldInfoInt<O> implements IFieldInfo<O> {
 	
 	}
 	
-	public abstract static class FieldInfoFloat<Object> implements IFieldInfo<Object> {
+	public abstract static class FieldInfoLong<O> implements IFieldInfo<O> {
 	
 	}
 	
-	public abstract static class FieldInfoDouble<Object> implements IFieldInfo<Object> {
+	public abstract static class FieldInfoFloat<O> implements IFieldInfo<O> {
+	
+	}
+	
+	public abstract static class FieldInfoDouble<O> implements IFieldInfo<O> {
 	
 	}
 	
 	@SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
-	public abstract static class FieldInfoBoolean<Object> implements IFieldInfo<Object> {
+	public abstract static class FieldInfoBoolean<O> implements IFieldInfo<O> {
 	
 	}
 	
-	public abstract static class FieldInfoByte<Object> implements IFieldInfo<Object> {
+	public abstract static class FieldInfoByte<O> implements IFieldInfo<O> {
 	
 	}
 	
-	public abstract static class FieldInfo<Object, FieldType> implements IFieldInfo<Object> {
+	public abstract static class FieldInfo<O, FieldType> implements IFieldInfo<O> {
 	
 	}
 	
