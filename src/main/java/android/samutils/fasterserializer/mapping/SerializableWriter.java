@@ -1,6 +1,5 @@
 package android.samutils.fasterserializer.mapping;
 
-import android.os.Parcel;
 import android.samutils.utils.Assert;
 import android.text.TextUtils;
 

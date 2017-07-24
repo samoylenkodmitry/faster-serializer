@@ -1,10 +1,8 @@
 package android.samutils.fasterserializer.mapping;
 
-import android.os.Parcel;
 import android.samutils.fasterserializer.mapping.value.IUniqueFieldsMap;
 import android.samutils.fasterserializer.mapping.value.IValueMap;
 import android.samutils.fasterserializer.mapping.value.UniqueObject;
-import android.samutils.utils.ArrayUtils;
 import android.samutils.utils.Assert;
 import android.text.TextUtils;
 import android.util.SparseArray;
@@ -15,6 +13,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
 
 public final class Serializer extends ValueHelper {
 	
@@ -71,7 +70,7 @@ public final class Serializer extends ValueHelper {
 	}
 	
 	public static <T> T[] readArray(final byte[] data, final Class<T> type) {
-		if (!ArrayUtils.isEmpty(data)) {
+		if (data != null && data.length > 0) {
 			Parcel parcel = null;
 			
 			try {
@@ -243,63 +242,72 @@ public final class Serializer extends ValueHelper {
 	
 	@SuppressWarnings("unchecked")
 	public static void write(final Parcel parcel, final Object object, final Class<?> inType) {
-		final Class<?> cls = inType == Object.class ? object == null ? null : object.getClass() : inType;
+		final Class<?> cls = inType == Object.class && object != null ? object.getClass() : inType;
 		
 		final JacksonJsoner.ObjectMap<String, JacksonJsoner.IFieldInfo> objectMap = sValueMap.getObjectMap(cls);
-		if (objectMap != null || cls == null) {
+		if (objectMap != null || cls == Object.class) {
 			final int startPos = parcel.dataPosition();
 			
 			Assert.assertTrue(startPos >= 0);
 			
 			parcel.writeInt(startPos);
 			
-			if (object != null) {
-				parcel.writeString(sUniqueFieldsMap == null ? null : sUniqueFieldsMap.getUniqueKey(object, cls));
-				
-				parcel.writeString(cls.getName());
-				
-				parcel.writeInt(objectMap.getCurrentVersion());
-				
-				final JacksonJsoner.IFieldInfo[] objFields = objectMap.getSerializerFields();
-				
-				final int size = objFields.length;
-				
-				for (int i = 0; i < size; i++) {
-					objFields[i].write(object, parcel);
+			if (object != null && objectMap != null) {
+				try {
+					parcel.writeString(sUniqueFieldsMap == null ? "" : sUniqueFieldsMap.getUniqueKey(object, cls));
+					
+					if (inType == Object.class) {
+						parcel.writeString(cls.getName());
+					}
+					
+					parcel.writeInt(objectMap.getCurrentVersion());
+					
+					final JacksonJsoner.IFieldInfo[] objFields = objectMap.getSerializerFields();
+					
+					final int size = objFields.length;
+					
+					for (int i = 0; i < size; i++) {
+						objFields[i].write(object, parcel);
+					}
+					
+					if (object instanceof CustomSerializable) {
+						final SerializableWriter writer = new SerializableWriter(parcel);
+						
+						writer.startWrite();
+						
+						((CustomSerializable) object).write(writer);
+						
+						writer.endWrite();
+					}
+					final int endPos = parcel.dataPosition();
+					parcel.setDataPosition(startPos);
+					parcel.writeInt(endPos);
+					parcel.setDataPosition(endPos);
+					Assert.assertTrue(startPos < endPos);
+					
+				} catch (final Exception e) {
+					
+					e.printStackTrace();
+					
+					parcel.setDataPosition(startPos);
+					
+					String message = e.getMessage();
+					if (message == null) {
+						message = e.getClass().getName();
+					}
+					Assert.assertTrue(message + Arrays.toString(e.getStackTrace()), false);
 				}
-				
-				if (object instanceof CustomSerializable) {
-					final SerializableWriter writer = new SerializableWriter(parcel);
-					
-					writer.startWrite();
-					
-					((CustomSerializable) object).write(writer);
-					
-					writer.endWrite();
-				}
-				final int endPos = parcel.dataPosition();
-				parcel.setDataPosition(startPos);
-				parcel.writeInt(endPos);
-				parcel.setDataPosition(endPos);
-				
-				Assert.assertTrue(startPos < endPos);
 			}
 		}
 	}
 	
-	public static <T> T read(final Parcel parcel, final Class<T> type) {
-		//todo unable to remove type writing while some fields types is Object.class
-		return read(parcel);
-	}
-	
-	@SuppressWarnings("unchecked")
-	public static <T> T read(final Parcel parcel) {
+	public static <T> T read(final Parcel parcel, Class<T> type) {
 		final int startPos = parcel.dataPosition();
 		final int endPos = parcel.readInt();
 		
 		Assert.assertTrue(startPos + " <= " + endPos, startPos <= endPos);
 		
-		if (startPos == endPos) {
+		if (startPos >= endPos) {
 			return null;
 		}
 		
@@ -313,19 +321,26 @@ public final class Serializer extends ValueHelper {
 				result = (T) UNIQUE_OBJECTS_POOL.get(uniqueKeyName);
 				if (result != null) {
 					
-					parcel.setDataPosition(endPos);
+					final String objUniqueKeyName = sUniqueFieldsMap == null ? "" : sUniqueFieldsMap.getUniqueKey(result, result.getClass());
 					
-					return result;
+					if (uniqueKeyName.equals(objUniqueKeyName)) {
+						
+						parcel.setDataPosition(endPos);
+						
+						return result;
+					}
 				}
 			}
 			
-			final String className = parcel.readString();
+			if (type == Object.class) {
+				final String className = parcel.readString();
+				type = (Class<T>) Class.forName(className);
+			}
 			
-			final Class<? extends T> type = (Class<? extends T>) Class.forName(className);
 			
 			final JacksonJsoner.ObjectMap<String, JacksonJsoner.IFieldInfo> objectMap = sValueMap.getObjectMap(type);
 			
-			Assert.assertNotNull(className, objectMap);
+			Assert.assertNotNull(type.getName(), objectMap);
 			
 			final int currentVersion = objectMap.getCurrentVersion();
 			final int readVersion = parcel.readInt();
@@ -338,7 +353,7 @@ public final class Serializer extends ValueHelper {
 					parcel.setDataPosition(endPos);
 					return result;
 				}
-				throw new VersionChangedException(readVersion + "!=" + currentVersion);
+				throw new VersionChangedException(type + ": " + readVersion + "!=" + currentVersion);
 			}
 			
 			final JacksonJsoner.IFieldInfo[] objFields = objectMap.getSerializerFields();
@@ -376,7 +391,11 @@ public final class Serializer extends ValueHelper {
 			
 			parcel.setDataPosition(endPos);
 			
-			Assert.assertTrue(e.getMessage() + Arrays.toString(e.getStackTrace()), false);
+			String message = e.getMessage();
+			if (message == null) {
+				message = e.getClass().getName();
+			}
+			Assert.assertTrue(message + Arrays.toString(e.getStackTrace()), false);
 		}
 		
 		return null;
@@ -405,7 +424,6 @@ public final class Serializer extends ValueHelper {
 		
 		Assert.assertFalse(type.isEnum());
 		
-		
 		final int count = parcel.readInt();
 		if (count == NULL_ARR_SIZE) {
 			return null;
@@ -424,14 +442,14 @@ public final class Serializer extends ValueHelper {
 		}
 		
 		for (int i = 0; i < count; i++) {
-			array[i] = read(parcel);
+			array[i] = read(parcel, type);
 		}
 		
 		return array;
 	}
 	
 	public static <E extends Enum<E>> void writeEnum(final Parcel parcel, final E obj) {
-		parcel.writeInt(obj == null ? NULL_FLAG : obj.ordinal());
+		parcel.writeByte(obj == null ? NULL_FLAG : (byte) obj.ordinal());
 	}
 	
 	public static <E extends Enum<E>> E readEnum(final Parcel parcel, final Class<E> type) {
@@ -473,13 +491,13 @@ public final class Serializer extends ValueHelper {
 		}
 	}
 	
-	public static <T> byte[] toBytes(final T object) {
+	public static <T> byte[] toBytes(final T object, final Class type) {
 		if (object == null) {
 			return null;
 		}
 		String key = null;
 		if (object instanceof UniqueObject) {
-			key = sUniqueFieldsMap.getUniqueKey(object, object.getClass());
+			key = sUniqueFieldsMap == null ? "" : sUniqueFieldsMap.getUniqueKey(object, type);
 			if (!TextUtils.isEmpty(key)) {
 				//noinspection unchecked
 				final byte[] result = BYTES_POOL.get(key);
@@ -494,11 +512,12 @@ public final class Serializer extends ValueHelper {
 		try {
 			parcel = Parcel.obtain();
 			
-			write(parcel, object, object.getClass());
+			write(parcel, object, type);
 			
 			final byte[] marshall = parcel.marshall();
 			if (!TextUtils.isEmpty(key)) {
 				BYTES_POOL.put(key, marshall);
+				UNIQUE_OBJECTS_POOL.put(key, object);
 			}
 			return marshall;
 		} finally {
@@ -508,65 +527,17 @@ public final class Serializer extends ValueHelper {
 		}
 	}
 	
-	public static <T> byte[] toBytes(final T[] objects) {
-		String key = null;
-		if (!ArrayUtils.isEmpty(objects)) {
-			StringBuilder keyBuilder = new StringBuilder();
-			for (final T object : objects) {
-				if (!(object instanceof UniqueObject)) {
-					keyBuilder = null;
-					break;
-				} else {
-					final String keyLocal = sUniqueFieldsMap.getUniqueKey(object, object.getClass());
-					if (TextUtils.isEmpty(keyLocal)) {
-						keyBuilder = null;
-						break;
-					} else {
-						keyBuilder.append(keyLocal);
-					}
-				}
-			}
-			if (keyBuilder != null) {
-				key = keyBuilder.toString();
-			}
-			if (!TextUtils.isEmpty(key)) {
-				//noinspection unchecked
-				final byte[] result = BYTES_POOL.get(keyBuilder.toString());
-				if (result != null) {
-					return result;
-				}
-			}
-		}
+	public static <T> byte[] arrayToBytes(final T[] objects, Class<?> type) {
 		Parcel parcel = null;
 		
 		try {
 			
 			if (objects != null) {
-				final Class<?> type;
-				if (objects.length == 1) {
-					type = objects[0].getClass();
-				} else {
-					boolean manyTypes = false;
-					Class<?> lastType = objects.length == 0 || objects[0] == null ? null : objects[0].getClass();
-					for (int i = 0; i < objects.length; i++) {
-						if (objects[i] != null) {
-							if (objects[i].getClass() != lastType) {
-								manyTypes = true;
-								break;
-							}
-							lastType = objects[i].getClass();
-						}
-					}
-					type = manyTypes ? Object.class : lastType == null ? objects.getClass().getComponentType() : lastType;
-				}
 				parcel = Parcel.obtain();
+				
 				writeArray(parcel, objects, type);
 				
-				final byte[] marshall = parcel.marshall();
-				if (!TextUtils.isEmpty(key)) {
-					BYTES_POOL.put(key, marshall);
-				}
-				return marshall;
+				return parcel.marshall();
 			} else {
 				return null;
 			}
@@ -577,8 +548,8 @@ public final class Serializer extends ValueHelper {
 		}
 	}
 	
-	public static <T> T read(final byte[] data) {
-		if (!ArrayUtils.isEmpty(data)) {
+	public static <T> T read(final byte[] data, final Class<T> type) {
+		if (data != null && data.length > 0) {
 			Parcel parcel = null;
 			
 			try {
@@ -593,7 +564,7 @@ public final class Serializer extends ValueHelper {
 					return null;
 				}
 				
-				return read(parcel);
+				return read(parcel, type);
 			} finally {
 				if (parcel != null) {
 					parcel.recycle();

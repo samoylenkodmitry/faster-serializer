@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-
 public abstract class EnumTokensMap implements IEnumTokensMap {
 
 	private final Map<Class<? extends Enum<?>>, Map<String, ? extends Enum<?>>> mEnumTokens;

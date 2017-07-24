@@ -1,6 +1,5 @@
 package android.samutils.fasterserializer.mapping;
 
-import android.os.Parcel;
 
 import java.lang.reflect.Array;
 import java.util.HashMap;
@@ -114,13 +113,7 @@ public class SerializableReader extends BaseValueReader<Parcel> {
 
 	@Override
 	public <T> T readObject(final String fieldName, final Class<T> objectType) {
-		return readObject(fieldName);
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public <T> T readObject(final String fieldName) {
-		return startReadField(fieldName) && !Serializer.readIsNull(mData) ? (T) Serializer.read(mData) : null;
+		return startReadField(fieldName) && !Serializer.readIsNull(mData) ? (T) Serializer.read(mData, objectType) : null;
 	}
 
 	public boolean[] readBooleanArray(final String fieldName) {
@@ -223,7 +216,7 @@ public class SerializableReader extends BaseValueReader<Parcel> {
 			final T[] result = (T[]) Array.newInstance(objectType, size);
 
 			for (int i = 0; i < size; i++) {
-				result[i] = !Serializer.readIsNull(mData) ? (T) Serializer.read(mData) : null;
+				result[i] = !Serializer.readIsNull(mData) ? (T) Serializer.read(mData, objectType) : null;
 			}
 
 			return result;

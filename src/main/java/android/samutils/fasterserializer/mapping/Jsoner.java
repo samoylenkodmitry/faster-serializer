@@ -8,6 +8,7 @@ import android.samutils.utils.ArrayUtils;
 import android.samutils.utils.Assert;
 import android.samutils.utils.DateUtils;
 import android.text.TextUtils;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -28,6 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
 
 public final class Jsoner extends ValueHelper {
 
@@ -461,7 +463,6 @@ public final class Jsoner extends ValueHelper {
 
 	private static final Map<Class<? extends Enum<?>>, Map<String, ? extends Enum<?>>> ENUM_CACHE = new HashMap<>();
 
-	@Deprecated
 	public static <E extends Enum<E>> E getEnum(final String jsonKey, final Class<E> enumType) {
 
 		Map<String, E> enumCache = (Map<String, E>) ENUM_CACHE.get(enumType);
@@ -503,21 +504,18 @@ public final class Jsoner extends ValueHelper {
 		return enumValue != null ? enumValue : enumCache.get(ENUM_VALUE_UNKNOWN);
 	}
 
-	@Deprecated
 	private static <T> Collection<JsonableFieldInfo> getKeyFields(final Class<T> type) {
 		Assert.assertNotNull(type);
 
 		return ValueHelper.getFields(JSONABLE_KEY_FIELDS_CACHE, type);
 	}
 
-	@Deprecated
 	public static <T> Collection<JsonableFieldInfo> getAllFields(final Class<T> type) {
 		Assert.assertNotNull(type);
 
 		return ValueHelper.getFields(JSONABLE_ALL_FIELDS_CACHE, type);
 	}
 
-	@Deprecated
 	// use Jackson.read
 	public static <T> T read(final String jsonStr) {
 		if (!TextUtils.isEmpty(jsonStr)) {
@@ -537,7 +535,6 @@ public final class Jsoner extends ValueHelper {
 		return null;
 	}
 
-	@Deprecated
 	// use Jackson.read
 	public static <T> T read(final JSONObject json) {
 		if (json == null) {
@@ -569,13 +566,11 @@ public final class Jsoner extends ValueHelper {
 		return null;
 	}
 
-	@Deprecated
 	// use Jackson.read
 	public static <T> T read(final String jsonStr, final Class<T> type) {
 		return read(jsonStr, type, false);
 	}
 
-	@Deprecated
 	// use Jackson.read
 	public static <T> T read(final String jsonStr, final Class<T> type, final boolean allFields) {
 		try {
@@ -587,13 +582,11 @@ public final class Jsoner extends ValueHelper {
 		}
 	}
 
-	@Deprecated
 	// use Jackson.read
 	public static <T> T read(final JSONObject json, final Class<T> type) throws JSONException {
 		return read(json, type, false);
 	}
 
-	@Deprecated
 	// use Jackson.read
 	public static <T> T read(final JSONObject json, final Class<T> type, final boolean allFields) throws JSONException {
 
@@ -628,7 +621,7 @@ public final class Jsoner extends ValueHelper {
 				read(json, result, allFields);
 			}
 		}
-		
+
 		return result;
 	}
 
@@ -722,7 +715,6 @@ public final class Jsoner extends ValueHelper {
 		return null;
 	}
 
-	@Deprecated
 	// use Jackson.read
 	private static <T> void read(final JSONObject json, final T object, final boolean allFields) throws JSONException {
 		Assert.assertNotNull(json);
@@ -795,7 +787,6 @@ public final class Jsoner extends ValueHelper {
 		}
 	}
 
-	@Deprecated
 	// use Jackson.read
 	public static <T> T read(
 		final JSONObject json, final String key, final Class<T> type, final boolean allFields
@@ -804,7 +795,6 @@ public final class Jsoner extends ValueHelper {
 		return json != null ? read(json.optJSONObject(key), type, allFields) : null;
 	}
 
-	@Deprecated
 	// use Jackson.readArray
 	public static <T> T[] readArray(final JSONArray jsonArray, final Class<T> type, final boolean allFields)
 		throws JSONException
@@ -838,7 +828,6 @@ public final class Jsoner extends ValueHelper {
 		}
 	}
 
-	@Deprecated
 	// use Jackson.readArray
 	public static <T> T[] readArray(
 		final JSONObject json, final String key, final Class<T> type, final boolean allFields
@@ -863,7 +852,6 @@ public final class Jsoner extends ValueHelper {
 		return null;
 	}
 
-	@Deprecated
 	// use Jackson.readArray
 	public static <T> T[] readArray(
 		final String jsonArrayStr, final Class<T> type, final boolean allFields)
@@ -911,14 +899,14 @@ public final class Jsoner extends ValueHelper {
 		return null;
 	}
 
-	public static <D> Map<String, D> readMap(final JSONObject object) throws JSONException {
+	public static <T> Map<String, T> readMap(final JSONObject object) throws JSONException {
 		Assert.assertNotNull(object);
-		Map<String, D> map = new HashMap<String, D>();
-
-		Iterator<String> keysItr = object.keys();
+		final Map<String, T> map = new HashMap<>();
+		
+		final Iterator<String> keysItr = object.keys();
 		while(keysItr.hasNext()) {
-			String key = keysItr.next();
-			D value = (D)object.get(key);
+			final String key = keysItr.next();
+			final T value = (T)object.get(key);
 			map.put(key, value);
 		}
 		return map;
@@ -968,6 +956,20 @@ public final class Jsoner extends ValueHelper {
 			return null;
 		}
 	}
+	
+	public static <R,T> JSONObject writeMap(final Map<R,T> object, final boolean allFields) throws JSONException {
+		if (object != null) {
+			final JSONObject json = new JSONObject();
+			
+			for (final Entry<R,T> entry : object.entrySet()) {
+				json.put(entry.getKey().toString(), write(entry.getValue(), allFields));
+			}
+			
+			return json;
+		} else {
+			return null;
+		}
+	}
 
 	public static <T> String toString(final T object) {
 		final JSONObject json;
@@ -983,7 +985,6 @@ public final class Jsoner extends ValueHelper {
 		return json != null ? json.toString() : null;
 	}
 
-	@Deprecated
 	// use JacksonJsoner.tryParseString
 	public static String optString(final JSONObject json, final String key) {
 		Assert.assertNotNull(json);
@@ -993,7 +994,6 @@ public final class Jsoner extends ValueHelper {
 		return JSONObject.NULL.equals(object) ? null : object.toString();
 	}
 
-	@Deprecated
 	// user JacksonJsoner.tryParseTimeStamp
 	public static long optIviTimestamp(final JSONObject json, final String key) {
 		Assert.assertNotNull(json);
@@ -1014,8 +1014,8 @@ public final class Jsoner extends ValueHelper {
 	}
 
 //	public static long optIviTimestamp(final JsonableReader reader, final String key) {
-//		android.samutils.utils.Assert.assertNotNull(reader);
-//		android.samutils.utils.Assert.assertTrue(!TextUtils.isEmpty(key));
+//		Assert.assertNotNull(reader);
+//		Assert.assertTrue(!TextUtils.isEmpty(key));
 //
 //		final Date date = !reader.isNull(key) ? DateUtils.parseIviDate(reader.readString(key)) : null;
 //
@@ -1023,8 +1023,8 @@ public final class Jsoner extends ValueHelper {
 //	}
 //
 //	public static long optIso8601Timestamp(final JsonableReader reader, final String key) {
-//		android.samutils.utils.Assert.assertNotNull(reader);
-//		android.samutils.utils.Assert.assertTrue(!TextUtils.isEmpty(key));
+//		Assert.assertNotNull(reader);
+//		Assert.assertTrue(!TextUtils.isEmpty(key));
 //
 //		final Date date = reader.isNull(key) ? null : DateUtils.parseIso8601Date(reader.readString(key));
 //
@@ -1195,7 +1195,7 @@ public final class Jsoner extends ValueHelper {
 			for (int i = 0; i < size; i++) {
 				array[i] = jsonArray.optString(i);
 			}
-			
+
 			return array;
 		} else {
 			return null;
@@ -1403,7 +1403,7 @@ public final class Jsoner extends ValueHelper {
 		}
 	}
 
-	public static <T> void putMap(final JSONObject json, final String key, final Map<String, T> map)
+	public static <R,T> void putMap(final JSONObject json, final String key, final Map<R, T> map)
 		throws JSONException
 	{
 		Assert.assertNotNull(json);
@@ -1412,12 +1412,35 @@ public final class Jsoner extends ValueHelper {
 		if (map != null) {
 			final JSONObject jsonMap = new JSONObject();
 
-			for (final Entry<String, T> entry : map.entrySet()) {
-				jsonMap.put(entry.getKey(), entry.getValue());
+			for (final Entry<R, T> entry : map.entrySet()) {
+				jsonMap.put(entry.getKey().toString(), entry.getValue());
 			}
 
 			json.put(key, jsonMap);
 		}
 	}
-	
+
+	private static void log(final String...messages) {
+		final StringBuilder log = new StringBuilder();
+		for (final String message : messages) {
+			log.append(message);
+		}
+		Log.d(TAG, log.toString());
+	}
+
+	private static void logTestParsers(final Object jacksonParsing, final Object jsonerParsing) {
+		if (jacksonParsing != null) {
+			final String jsonerString = jsonerParsing.toString();
+			final String jacksonString = jacksonParsing.toString();
+			final boolean equals = jacksonParsing.equals(jsonerParsing);
+			log("TEST_PARSING: ",jsonerParsing.getClass().getSimpleName()," equals ",(equals+""));
+			if (!equals) {
+				log("TEST_PARSING JACKSON: ", jacksonString);
+				log("TEST_PARSING JSONER : ", jsonerString);
+			}
+		} else {
+			log("TEST_PARSING JACKSON ERROR "+jsonerParsing.getClass().getSimpleName());
+			log("TEST_PARSING JACKSON ERROR: JSONER : ", jsonerParsing.toString());
+		}
+	}
 }

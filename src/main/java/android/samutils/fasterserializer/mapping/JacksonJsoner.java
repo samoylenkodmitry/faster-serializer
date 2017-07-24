@@ -1,7 +1,5 @@
 package android.samutils.fasterserializer.mapping;
 
-import android.os.Looper;
-import android.os.Parcel;
 import android.samutils.fasterserializer.mapping.value.IEnumTokensMap;
 import android.samutils.fasterserializer.mapping.value.IUniqueFieldsMap;
 import android.samutils.fasterserializer.mapping.value.IValueMap;
@@ -9,7 +7,6 @@ import android.samutils.fasterserializer.mapping.value.ResponseData;
 import android.samutils.fasterserializer.mapping.value.TokenizedEnum;
 import android.samutils.fasterserializer.mapping.value.UniqueObject;
 import android.samutils.utils.ArrayUtils;
-import android.samutils.utils.Assert;
 import android.samutils.utils.DateUtils;
 import android.samutils.utils.ParseUtils;
 import android.samutils.utils.ReflectUtils;
@@ -30,10 +27,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 
 
 @SuppressWarnings("unused")
@@ -89,42 +87,42 @@ public final class JacksonJsoner {
 		sUniqueFieldsMap = uniqueFieldsMap;
 	}
 	
-	public interface IFieldInfo<O> {
+	public interface IFieldInfo<Object> {
 		String getName();
 		
-		void read(final O obj, final JsonParser json, final JsonNode sourceNode) throws IOException;
+		void read(final Object obj, final JsonParser json, final JsonNode sourceNode) throws IOException;
 		
-		void read(final O obj, final Parcel parcel);
+		void read(final Object obj, final Parcel parcel);
 		
-		void write(final O obj, final Parcel parcel);
+		void write(final Object obj, final Parcel parcel);
 	}
 	
-	public abstract static class FieldInfoInt<O> implements IFieldInfo<O> {
-	
-	}
-	
-	public abstract static class FieldInfoLong<O> implements IFieldInfo<O> {
+	public abstract static class FieldInfoInt<Object> implements IFieldInfo<Object> {
 	
 	}
 	
-	public abstract static class FieldInfoFloat<O> implements IFieldInfo<O> {
+	public abstract static class FieldInfoLong<Object> implements IFieldInfo<Object> {
 	
 	}
 	
-	public abstract static class FieldInfoDouble<O> implements IFieldInfo<O> {
+	public abstract static class FieldInfoFloat<Object> implements IFieldInfo<Object> {
+	
+	}
+	
+	public abstract static class FieldInfoDouble<Object> implements IFieldInfo<Object> {
 	
 	}
 	
 	@SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
-	public abstract static class FieldInfoBoolean<O> implements IFieldInfo<O> {
+	public abstract static class FieldInfoBoolean<Object> implements IFieldInfo<Object> {
 	
 	}
 	
-	public abstract static class FieldInfoByte<O> implements IFieldInfo<O> {
+	public abstract static class FieldInfoByte<Object> implements IFieldInfo<Object> {
 	
 	}
 	
-	public abstract static class FieldInfo<O, FieldType> implements IFieldInfo<O> {
+	public abstract static class FieldInfo<Object, FieldType> implements IFieldInfo<Object> {
 	
 	}
 	
@@ -135,11 +133,7 @@ public final class JacksonJsoner {
 		private final Object mFillLock = new Object();
 		private final Object mSerializerFillLock = new Object();
 		
-		protected final void addField(final Key key, final Value value) {
-			mMap.put(key, value);
-		}
-		
-		protected abstract void fill();
+		protected abstract void fill(final Map mMap);
 		
 		public abstract <T> T create(Class<T> cls);
 		
@@ -151,8 +145,9 @@ public final class JacksonJsoner {
 			if (mMap == null) {
 				synchronized (mFillLock) {
 					if (mMap == null) {
-						mMap = new HashMap<>();
-						fill();
+						final Map<Key, Value> objectMap = new ConcurrentHashMap<>();
+						fill(objectMap);
+						mMap = objectMap;
 					}
 				}
 			}
@@ -173,19 +168,27 @@ public final class JacksonJsoner {
 							}
 						});
 						
-						mFieldsArray = new IFieldInfo[entriesList.size()];
+						final IFieldInfo[] fieldsArray = new IFieldInfo[entriesList.size()];
 						
 						for (int i = 0; i < entriesList.size(); i++) {
 							final Map.Entry<Key, Value> keyValueEntry = entriesList.get(i);
-							mFieldsArray[i] = (IFieldInfo) keyValueEntry.getValue();
+							fieldsArray[i] = (IFieldInfo) keyValueEntry.getValue();
 						}
+						
+						mFieldsArray = fieldsArray;
 					}
 				}
 			}
 			return mFieldsArray;
 		}
 		
+		public void addFields(final Map<Key, Value> fields) {
+			synchronized (mFillLock) {
+				getFields().putAll(fields);
+			}
+		}
 	}
+	
 	
 	public static <Result, Error> Pair<Result, Error> readResultObjectOrError( final ResponseData responseData,
 		final Class<Result> resultClass, final Class<Error> errorClass) throws IOException {
@@ -249,6 +252,7 @@ public final class JacksonJsoner {
 		
 		return resultErrorPair;
 	}
+	
 	
 	public static <Result, Error> Pair<Result[], Error> readResultArrayOrError( final ResponseData responseData,
 		final Class<Result> resultClass, final Class<Error> errorClass) throws IOException {
@@ -353,7 +357,6 @@ public final class JacksonJsoner {
 	}
 	
 	public static <T> T readObject(final JsonParser parser, final JsonNode sourceNode, final Class<T> classType) throws IOException {
-		Assert.assertTrue("do not parse json in ui thread", Looper.getMainLooper() != Looper.myLooper());
 		moveToToken(parser);
 		
 		if (parser.getCurrentToken() == JsonToken.VALUE_NULL) {
@@ -368,7 +371,12 @@ public final class JacksonJsoner {
 		
 		final ObjectMap<String, IFieldInfo> objectMap = sValueMap.getObjectMap(classType);
 		
-		final T result = objectMap == null ? ReflectUtils.createReflect(classType) : objectMap.create(classType);
+		final T result;
+		if (objectMap == null) {
+			result = classType == Object.class ? null : ReflectUtils.createReflect(classType);
+		} else {
+			result = objectMap.create(classType);
+		}
 		final Map<String, IFieldInfo> fieldInfoMap = objectMap == null ? null : objectMap.getFields();
 		if (fieldInfoMap != null && !fieldInfoMap.isEmpty()) {
 			for (
@@ -513,6 +521,7 @@ public final class JacksonJsoner {
 		moveToToken(parser);
 		
 		final Collection<T> result = new ArrayList<>();
+		final boolean notArray = parser.getCurrentToken() != JsonToken.START_ARRAY;
 		for (
 			JsonToken token = parser.getCurrentToken();
 			token != null && token != JsonToken.END_ARRAY && token != JsonToken.VALUE_NULL;
@@ -528,6 +537,9 @@ public final class JacksonJsoner {
 				}
 			} else if (token == JsonToken.START_OBJECT) {
 				result.add(readObject(parser, sourceNode == null ? null : sourceNode.get(result.size()), classType));
+			}
+			if (notArray) {
+				break;
 			}
 		}
 		

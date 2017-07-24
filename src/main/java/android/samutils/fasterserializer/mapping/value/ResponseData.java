@@ -5,7 +5,6 @@ import android.samutils.utils.IoUtils;
 import java.io.IOException;
 import java.io.InputStream;
 
-
 public final class ResponseData {
 
     private final byte[] mData;

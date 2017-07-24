@@ -1,5 +1,6 @@
 package android.samutils.fasterserializer.mapping;
 
+import android.samutils.fasterserializer.processor.Value;
 import android.samutils.utils.Assert;
 
 import java.lang.annotation.Annotation;
@@ -13,7 +14,6 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import android.samutils.fasterserializer.processor.Value;
 
 public abstract class ValueHelper {
 	protected static final boolean LOGGING = false;

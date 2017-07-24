@@ -139,7 +139,7 @@ public final class ObjectMapperGenerator {
 				}
 				
 				// skip non json fields
-				if (value == null) {
+				if (value == null || value.skipReadWrite()) {
 					continue;
 				}
 				
@@ -173,12 +173,14 @@ public final class ObjectMapperGenerator {
 			
 			final Collection<String> imports1 = new HashSet<>();
 			imports1.add("android.samutils.fasterserializer.mapping.value.ValueMap");
+			imports1.add("java.util.HashMap");
+			imports1.add("android.samutils.fasterserializer.mapping.JacksonJsoner");
 			
 			final StringBuilder builderValueMapFiller = new StringBuilder();
 			
 			builderValueMapFiller
 				.append("\t@Override\n")
-				.append("\tpublic void fill() {\n");
+				.append("\tpublic void fill(final HashMap<Class<?>, JacksonJsoner.ObjectMap<String, JacksonJsoner.IFieldInfo>> mValues) {\n");
 			
 			for (final String className : objectMapFiles.keySet()) {
 				builderValueMapFiller.append("\t\tmValues.put(").append(className).append(".class, new ").append(objectMapFiles.get(className)).append("());\n");
@@ -243,11 +245,13 @@ public final class ObjectMapperGenerator {
 					stringBuilder
 						.append("object.")
 						.append(element.getSimpleName())
-						.append("+\"_\"+");
+						.append("+");
 				}
+				final String[] classNameSplit = classWithUniqueFields.split("\\.");
+				final String simpleClassName = classNameSplit[classNameSplit.length-1];
 				stringBuilder
 					.append("\"")
-					.append(classWithUniqueFields)
+					.append(simpleClassName)
 					.append("\"");
 				
 				builderUniqueFieldsMapFiller
@@ -287,10 +291,10 @@ public final class ObjectMapperGenerator {
 		imports.add("android.samutils.fasterserializer.mapping.Serializer");
 		imports.add("android.samutils.utils.ArrayUtils");
 		imports.add("java.util.Collection");
-		
+		imports.add("java.util.Map");
 		imports.add("com.fasterxml.jackson.core.JsonParser");
 		imports.add("com.fasterxml.jackson.databind.JsonNode");
-		imports.add("android.os.Parcel");
+		imports.add("android.samutils.fasterserializer.mapping.Parcel");
 		
 		
 		final StringBuilder builder = new StringBuilder();
@@ -299,7 +303,7 @@ public final class ObjectMapperGenerator {
 			.append(" @Override public <T> T create(final Class<T> cls) { return (T) new ").append(className).append("(); }\n\n ")
 			.append(" @Override public <T> T[] createArray(final int count) { return (T[]) new ").append(className).append("[count]; }\n\n ")
 			.append("\t@Override\n")
-			.append("\tpublic void fill() {\n");
+			.append("\tpublic void fill(final Map mMap) {\n");
 		
 		Map<String, String> allFields = new HashMap<>();
 		
@@ -322,7 +326,7 @@ public final class ObjectMapperGenerator {
 			final String jsonKey = valueKey == null || valueKey.length() == 0 ? fieldName : valueKey;
 			
 			String addFieldCall = (String.format(Locale.getDefault(),
-				"\n\t\taddField(\"%1s\", %2s{\n" +
+				"\n\t\tmMap.put(\"%1s\", %2s{\n" +
 					"\t\t\t\t\n" +
 					"\t\t\t\t@Override\n" +
 					"\t\t\t\tpublic void read(final %3s obj, final JsonParser json, final JsonNode source) throws IOException {\n" +

@@ -26,7 +26,6 @@ public interface ValueReader extends Iterable<String> {
 
 	<E extends Enum<E>> E readEnum(final String fieldName, final Class<E> enumType) throws Exception;
 	<T> T readObject(final String fieldName, final Class<T> objectType) throws Exception;
-	<T> T readObject(final String fieldName) throws Exception;
 
 	int[] readIntArray(final String fieldName) throws IOException;
 	String[] readStringArray(final String fieldName) throws IOException;

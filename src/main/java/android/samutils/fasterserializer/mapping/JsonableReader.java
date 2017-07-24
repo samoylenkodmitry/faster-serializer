@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.util.Iterator;
 
+
 public final class JsonableReader extends BaseValueReader<JsonNode> {
 
 	JsonableReader(final JsonNode data) {
@@ -80,12 +81,6 @@ public final class JsonableReader extends BaseValueReader<JsonNode> {
 
 	public <T> T readObject(final Class<T> objectType) throws IOException {
 		return JacksonJsoner.readObject(mData.traverse(), mData, objectType);
-	}
-
-	@Override
-	@Deprecated
-	public <T> T readObject(final String fieldName) {
-		return null;
 	}
 
 	public boolean[] readBooleanArray(final String fieldName) throws IOException {

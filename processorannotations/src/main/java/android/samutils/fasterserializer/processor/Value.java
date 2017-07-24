@@ -19,6 +19,8 @@ public @interface Value {
 	boolean fieldIsEnum() default false;
 
 	boolean uniqueField() default false;
+	
+	boolean skipReadWrite() default false;
 
 	String EMPTY_KEY = "";
 	class EMPTY_CLASS{}
