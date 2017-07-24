@@ -35,7 +35,7 @@ android {
 ```gradle
 dependencies {
 ...
-	compile 'android.samutils:faster-serializer:+'// 0.9.5 for current time
+	compile 'android.samutils:faster-serializer:+'// 0.9.6 for current time
 	compile 'android.samutils:processorannotations:+'
 	annotationProcessor 'android.samutils:processor:+'
 
