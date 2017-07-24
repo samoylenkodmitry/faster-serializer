@@ -88,6 +88,10 @@ Note: class ValueMapFiller is auto generated after first POJO created and build 
 		Log.d("serializer test", "out pojo: "+ Jsoner.toString(testPojoOut));
 ```
 
+```log
 05-08 19:04:17.164 917-917/? D/serializer test: input pojo to json: {"__class__":"android.samutils.fasterserializerdemo.MyPojo","someInt":1337,"someString":"some string"}
+
 05-08 19:04:17.166 917-917/? D/serializer test: bytes count: 144
+
 05-08 19:04:17.166 917-917/? D/serializer test: out pojo: {"__class__":"android.samutils.fasterserializerdemo.MyPojo","someInt":1337,"someString":"some string"}
+```
