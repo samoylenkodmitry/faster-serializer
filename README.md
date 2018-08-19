@@ -1,4 +1,7 @@
 # faster-serializer
+
+https://android-arsenal.com/details/1/6511
+
 Android library for faster POJO de|serialization and Json parsing
 
 How to use library 'faster-serializer' (https://github.com/s-a--m/Fasterserializerdemo)
