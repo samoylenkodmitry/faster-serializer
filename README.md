@@ -28,7 +28,7 @@ android {
 ...
 		javaCompileOptions {
 			annotationProcessorOptions {
-				className 'android.samutils.fasterserializer.processor.AnnotationProcessor'
+				className 'ru.ivi.processor.AnnotationProcessor'
 			}
 		}
 
