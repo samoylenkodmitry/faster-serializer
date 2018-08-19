@@ -38,7 +38,7 @@ android {
 ```gradle
 dependencies {
 ...
-	compile 'android.samutils:faster-serializer:+'// 0.9.6 for current time
+	compile 'android.samutils:faster-serializer:+'// 1.0.1 for current time
 	compile 'android.samutils:processorannotations:+'
 	annotationProcessor 'android.samutils:processor:+'
 
@@ -67,9 +67,8 @@ Note: each annotated field must be non-final public
 2. Initialize Serializer before usage:
 
 ```java
-		Serializer.setValueMap(new ValueMapFiller());
+		Serializer.initialize();
 ```
-Note: class ValueMapFiller is auto generated after first POJO created and build successfully finished
 
 3. Use public method of Serializer:
 

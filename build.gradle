@@ -12,7 +12,7 @@ ext {
 	siteUrl = 'https://github.com/s-a--m/faster-serializer'
 	gitUrl = 'https://github.com/s-a--m/faster-serializer.git'
 
-	libraryVersion = '0.9.6'
+	libraryVersion = '1.0.1'
 
 	developerId = 'dmitrysamoylenko'
 	developerName = 'Dmitry'
@@ -31,8 +31,8 @@ android {
 	defaultConfig {
 		minSdkVersion 15
 		targetSdkVersion 27
-		versionCode 3
-		versionName "1.1"
+		versionCode 4
+		versionName "1.0.1"
 
 	}
 	buildTypes {
@@ -52,7 +52,7 @@ android {
 
 dependencies {
 	compile project(':processorannotations')
-	implementation "com.android.support:support-annotations:27.1.1"
+	compile "com.android.support:support-annotations:27.1.1"
 	compile 'com.fasterxml.jackson.core:jackson-core:2.9.6'
 	compile 'com.fasterxml.jackson.core:jackson-annotations:2.9.6'
 	compile 'com.fasterxml.jackson.core:jackson-databind:2.9.6'

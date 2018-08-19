@@ -12,7 +12,7 @@ ext {
 	siteUrl = 'https://github.com/s-a--m/faster-serializer'
 	gitUrl = 'https://github.com/s-a--m/faster-serializer.git'
 
-	libraryVersion = '1.0.0'
+	libraryVersion = '1.0.1'
 
 	developerId = 'dmitrysamoylenko'
 	developerName = 'Dmitry'
