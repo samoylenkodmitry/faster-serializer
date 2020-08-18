@@ -1,3 +1,5 @@
+Partial copyright by Sergei Borisov odysseos.ithakis@gmail.com
+
 # faster-serializer
 
 https://android-arsenal.com/details/1/6511
