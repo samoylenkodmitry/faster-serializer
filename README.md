@@ -1,5 +1,8 @@
 Partial copyright by Sergei Borisov odysseos.ithakis@gmail.com
+
 Partial copyright by Anton Kuznetsov https://github.com/dungeon-master
+
+Partial copyright by Konstantin Karpyshev https://github.com/pudans
 
 # faster-serializer
 
